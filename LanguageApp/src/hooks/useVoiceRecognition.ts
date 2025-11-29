@@ -16,17 +16,6 @@ export const useVoiceRecognition = (): UseVoiceRecognitionReturn => {
     const [results, setResults] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        Voice.onSpeechStart = onSpeechStart;
-        Voice.onSpeechEnd = onSpeechEnd;
-        Voice.onSpeechError = onSpeechError;
-        Voice.onSpeechResults = onSpeechResults;
-
-        return () => {
-            Voice.destroy().then(Voice.removeAllListeners);
-        };
-    }, []);
-
     const onSpeechStart = (e: any) => {
         console.log('onSpeechStart: ', e);
         setIsRecording(true);
@@ -50,6 +39,17 @@ export const useVoiceRecognition = (): UseVoiceRecognitionReturn => {
             setResults(e.value);
         }
     };
+
+    useEffect(() => {
+        Voice.onSpeechStart = onSpeechStart;
+        Voice.onSpeechEnd = onSpeechEnd;
+        Voice.onSpeechError = onSpeechError;
+        Voice.onSpeechResults = onSpeechResults;
+
+        return () => {
+            Voice.destroy().then(Voice.removeAllListeners);
+        };
+    }, []);
 
     const startListening = useCallback(async () => {
         try {

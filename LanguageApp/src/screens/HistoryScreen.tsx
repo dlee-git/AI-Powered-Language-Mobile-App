@@ -1,28 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { theme } from '../theme/theme';
-import { getVocabulary, getFlashcards } from '../services/database';
+import { useStore } from '../store/useStore';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useFocusEffect } from '@react-navigation/native';
+import { VocabularyItem, Flashcard } from '../types';
 
 export default function HistoryScreen() {
     const [activeTab, setActiveTab] = useState<'vocab' | 'flashcards'>('vocab');
-    const [vocabList, setVocabList] = useState<any[]>([]);
-    const [flashcardList, setFlashcardList] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const vocab = await getVocabulary();
-            const cards = await getFlashcards();
-            setVocabList(vocab);
-            setFlashcardList(cards);
-        } catch (error) {
-            console.error('Failed to load history data', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { vocabulary, flashcards, isLoading, loadData, deleteVocabulary, deleteFlashcard } = useStore();
 
     useFocusEffect(
         React.useCallback(() => {
@@ -30,27 +18,67 @@ export default function HistoryScreen() {
         }, [])
     );
 
-    const renderVocabItem = ({ item }: { item: any }) => (
-        <View style={styles.card}>
-            <Text style={styles.word}>{item.word}</Text>
-            <Text style={styles.translation}>{item.translation}</Text>
-            <Text style={styles.example}>{item.example}</Text>
-        </View>
+    const handleDeleteVocab = (id: number) => {
+        Alert.alert(
+            'Delete Item',
+            'Are you sure you want to delete this item?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteVocabulary(id) },
+            ]
+        );
+    };
+
+    const handleDeleteFlashcard = (id: number) => {
+        Alert.alert(
+            'Delete Flashcard',
+            'Are you sure you want to delete this flashcard?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteFlashcard(id) },
+            ]
+        );
+    };
+
+    const renderVocabItem = ({ item }: { item: VocabularyItem }) => (
+        <Card style={styles.card}>
+            <View style={styles.cardHeader}>
+                <View>
+                    <Text style={styles.word}>{item.word}</Text>
+                    <Text style={styles.translation}>{item.translation}</Text>
+                </View>
+                <Button
+                    title="Delete"
+                    variant="danger"
+                    onPress={() => handleDeleteVocab(item.id)}
+                    style={styles.deleteButton}
+                />
+            </View>
+            {item.example && <Text style={styles.example}>{item.example}</Text>}
+        </Card>
     );
 
-    const renderFlashcard = ({ item }: { item: any }) => (
-        <View style={styles.card}>
-            <Text style={styles.word}>{item.front}</Text>
+    const renderFlashcard = ({ item }: { item: Flashcard }) => (
+        <Card style={styles.card}>
+            <View style={styles.cardHeader}>
+                <Text style={styles.word}>{item.front}</Text>
+                <Button
+                    title="Delete"
+                    variant="danger"
+                    onPress={() => handleDeleteFlashcard(item.id)}
+                    style={styles.deleteButton}
+                />
+            </View>
             <View style={styles.divider} />
             <Text style={styles.translation}>{item.back}</Text>
             <Text style={styles.status}>{item.status.toUpperCase()}</Text>
-        </View>
+        </Card>
     );
 
-    if (loading) {
+    if (isLoading && vocabulary.length === 0 && flashcards.length === 0) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <LoadingSpinner size="large" />
             </View>
         );
     }
@@ -72,17 +100,31 @@ export default function HistoryScreen() {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={activeTab === 'vocab' ? vocabList : flashcardList}
-                renderItem={activeTab === 'vocab' ? renderVocabItem : renderFlashcard}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary }}>
-                        No items found. Start a conversation to generate some!
-                    </Text>
-                }
-            />
+            {activeTab === 'vocab' ? (
+                <FlatList
+                    data={vocabulary}
+                    renderItem={renderVocabItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary }}>
+                            No vocabulary found. Start a conversation to generate some!
+                        </Text>
+                    }
+                />
+            ) : (
+                <FlatList
+                    data={flashcards}
+                    renderItem={renderFlashcard}
+                    keyExtractor={(item) => item.id.toString()}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.textSecondary }}>
+                            No flashcards found. Start a conversation to generate some!
+                        </Text>
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -119,10 +161,16 @@ const styles = StyleSheet.create({
         padding: theme.spacing.m,
     },
     card: {
-        backgroundColor: theme.colors.surface,
-        padding: theme.spacing.m,
-        borderRadius: theme.borderRadius.m,
         marginBottom: theme.spacing.m,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    deleteButton: {
+        height: 32,
+        paddingHorizontal: theme.spacing.s,
     },
     word: {
         fontSize: 18,

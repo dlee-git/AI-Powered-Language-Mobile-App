@@ -50,6 +50,37 @@ export const setSystemPrompt = (prompt: string) => {
     conversationHistory.unshift({ role: 'system', content: prompt });
 };
 
+export const transcribeAudio = async (uri: string) => {
+    try {
+        if (OPENAI_API_KEY === 'YOUR_API_KEY_HERE') {
+            throw new Error('OpenAI API Key not set.');
+        }
+
+        const formData = new FormData();
+        formData.append('file', {
+            uri: uri,
+            type: 'audio/m4a',
+            name: 'audio.m4a',
+        } as any);
+        formData.append('model', 'whisper-1');
+
+        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'multipart/form-data',
+            },
+            body: formData,
+        });
+
+        const data = await response.json();
+        return data.text;
+    } catch (error) {
+        console.error('Whisper Fetch Error:', error);
+        return null;
+    }
+};
+
 export const sendMessage = async (message: string) => {
     console.log('Sending message to LLM:', message);
     addToHistory('user', message);

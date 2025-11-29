@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { theme } from '../theme/theme';
 import { useStore } from '../store/useStore';
+import { Button } from '../components/Button';
+import { LanguageCode, DifficultyLevel } from '../types';
 
-const LANGUAGES = [
+const LANGUAGES: { code: LanguageCode; name: string }[] = [
     { code: 'en', name: 'English' },
     { code: 'es', name: 'Spanish' },
     { code: 'fr', name: 'French' },
@@ -11,10 +13,28 @@ const LANGUAGES = [
     { code: 'ja', name: 'Japanese' },
 ];
 
-const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'];
+const LEVELS: DifficultyLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1'];
 
 export default function SettingsScreen() {
-    const { userLanguage, targetLanguage, difficultyLevel, setLanguage, setDifficulty } = useStore();
+    const { userLanguage, targetLanguage, difficultyLevel, setLanguage, setDifficulty, clearHistory } = useStore();
+
+    const handleClearData = () => {
+        Alert.alert(
+            "Clear Data",
+            "Are you sure you want to clear all conversation history?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Clear",
+                    style: "destructive",
+                    onPress: async () => {
+                        await clearHistory();
+                        Alert.alert("Success", "History cleared.");
+                    }
+                }
+            ]
+        );
+    };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -54,7 +74,7 @@ export default function SettingsScreen() {
                     <TouchableOpacity
                         key={level}
                         style={[styles.option, difficultyLevel === level && styles.activeOption]}
-                        onPress={() => setDifficulty(level as any)}
+                        onPress={() => setDifficulty(level)}
                     >
                         <Text style={[styles.optionText, difficultyLevel === level && styles.activeOptionText]}>
                             {level}
@@ -62,6 +82,14 @@ export default function SettingsScreen() {
                     </TouchableOpacity>
                 ))}
             </View>
+
+            <View style={styles.divider} />
+
+            <Button
+                title="Clear Conversation History"
+                onPress={handleClearData}
+                variant="danger"
+            />
         </ScrollView>
     );
 }
@@ -103,5 +131,10 @@ const styles = StyleSheet.create({
     activeOptionText: {
         fontWeight: 'bold',
         color: '#FFFFFF',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: theme.colors.border,
+        marginVertical: theme.spacing.xl,
     },
 });

@@ -109,3 +109,11 @@ export const getConversationHistory = async () => {
 export const clearConversationHistory = async () => {
     await db.runAsync('DELETE FROM conversations');
 };
+
+export const deleteVocabularyItem = async (id: number) => {
+    await db.runAsync('DELETE FROM vocabulary WHERE id = ?', id);
+};
+
+export const deleteFlashcardItem = async (id: number) => {
+    await db.runAsync('DELETE FROM flashcards WHERE id = ?', id);
+};

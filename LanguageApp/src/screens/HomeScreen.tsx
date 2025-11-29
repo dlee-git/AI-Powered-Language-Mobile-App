@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useStore } from '../store/useStore';
 import { theme } from '../theme/theme';
+import { Button } from '../components/Button';
+import { Card } from '../components/Card';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -24,25 +26,23 @@ export default function HomeScreen({ navigation }: Props) {
                 </Text>
             </View>
 
-            <View style={styles.statsCard}>
+            <Card style={styles.statsCard}>
                 <Text style={styles.cardTitle}>Current Level</Text>
                 <Text style={styles.levelText}>{difficultyLevel}</Text>
-            </View>
+            </Card>
 
             <View style={styles.actionsContainer}>
-                <TouchableOpacity
-                    style={[styles.button, styles.primaryButton]}
+                <Button
+                    title="Start Roleplay"
                     onPress={() => navigation.navigate('Roleplay')}
-                >
-                    <Text style={styles.buttonText}>Start Roleplay</Text>
-                </TouchableOpacity>
+                    style={styles.buttonSpacing}
+                />
 
-                <TouchableOpacity
-                    style={[styles.button, styles.secondaryButton]}
+                <Button
+                    title="Start Tutor Mode"
+                    variant="outline"
                     onPress={() => navigation.navigate('Tutor')}
-                >
-                    <Text style={styles.buttonText}>Start Tutor Mode</Text>
-                </TouchableOpacity>
+                />
             </View>
         </ScrollView>
     );
@@ -69,14 +69,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     statsCard: {
-        backgroundColor: theme.colors.surface,
-        padding: theme.spacing.l,
-        borderRadius: theme.borderRadius.l,
         width: '100%',
         alignItems: 'center',
         marginBottom: theme.spacing.xl,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
     },
     cardTitle: {
         ...theme.typography.h2,
@@ -89,24 +84,8 @@ const styles = StyleSheet.create({
     },
     actionsContainer: {
         width: '100%',
-        gap: theme.spacing.m,
     },
-    button: {
-        paddingVertical: theme.spacing.m,
-        paddingHorizontal: theme.spacing.l,
-        borderRadius: theme.borderRadius.m,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    primaryButton: {
-        backgroundColor: theme.colors.primary,
-    },
-    secondaryButton: {
-        backgroundColor: theme.colors.surface,
-        borderWidth: 1,
-        borderColor: theme.colors.primary,
-    },
-    buttonText: {
-        ...theme.typography.button,
+    buttonSpacing: {
+        marginBottom: theme.spacing.m,
     },
 });
