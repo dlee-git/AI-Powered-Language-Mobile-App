@@ -81,17 +81,17 @@ export const transcribeAudio = async (uri: string) => {
     }
 };
 
-export const sendMessage = async (message: string) => {
+export const sendMessage = async (message: string): Promise<string> => {
     console.log('Sending message to LLM:', message);
     addToHistory('user', message);
 
     // Check cache
     const cacheKey = `response_${message}_${conversationHistory.length}`; // Simple cache key
-    const cached = getCachedResponse(cacheKey);
+    const cached = getCachedResponse<string>(cacheKey);
     if (cached) {
         console.log('Returning cached response');
-        addToHistory('assistant', cached);
-        return cached;
+        addToHistory('assistant', cached as string);
+        return cached as string;
     }
 
     try {
